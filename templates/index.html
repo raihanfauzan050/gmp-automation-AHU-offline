@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GMP Automation System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            min-height: 100vh; color: #e2e8f0;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center; padding: 30px 0 20px;
+        }
+        header h1 { font-size: 2em; color: #60a5fa; margin-bottom: 8px; }
+        header p { color: #94a3b8; font-size: 0.95em; }
+        .language-toggle { display: flex; justify-content: center; gap: 4px; margin-top: 14px; }
+        .language-toggle button {
+            padding: 6px 10px; border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 7px;
+            background: rgba(15, 23, 42, 0.35); color: #94a3b8; cursor: pointer; font-size: 0.82em;
+        }
+        .language-toggle button.active { background: #2563eb; border-color: #3b82f6; color: #fff; }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8); border-radius: 16px;
+            padding: 28px; margin-bottom: 20px;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        .card h2 {
+            font-size: 1.15em; color: #60a5fa; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card h2 .step {
+            background: #3b82f6; color: #fff; border-radius: 50%;
+            width: 28px; height: 28px; display: flex; align-items: center;
+            justify-content: center; font-size: 0.85em; flex-shrink: 0;
+        }
+
+        label { display: block; font-weight: 600; margin-bottom: 6px; color: #cbd5e1; font-size: 0.9em; }
+
+        input[type="password"], input[type="text"] {
+            width: 100%; padding: 12px 16px; border-radius: 10px;
+            border: 1px solid rgba(96, 165, 250, 0.3); background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0; font-size: 0.95em; outline: none; transition: border 0.2s;
+        }
+        input:focus { border-color: #3b82f6; }
+
+        .test-type-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+        .test-type-btn {
+            padding: 14px; border-radius: 10px; border: 2px solid rgba(96, 165, 250, 0.2);
+            background: rgba(15, 23, 42, 0.4); color: #94a3b8; cursor: pointer;
+            text-align: left; font-size: 0.88em; transition: all 0.2s;
+        }
+        .test-type-btn:hover { border-color: rgba(96, 165, 250, 0.5); background: rgba(59, 130, 246, 0.1); }
+        .test-type-btn.selected {
+            border-color: #3b82f6; background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa; font-weight: 600;
+        }
+        .test-type-btn .label { font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+        .test-type-btn.selected .label { color: #60a5fa; }
+        .test-type-btn .desc { font-size: 0.82em; color: #64748b; }
+        .test-type-btn.selected .desc { color: #93c5fd; }
+
+        .upload-area {
+            border: 2px dashed rgba(96, 165, 250, 0.3); border-radius: 12px;
+            padding: 40px; text-align: center; cursor: pointer;
+            transition: all 0.3s; background: rgba(15, 23, 42, 0.3);
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #3b82f6; background: rgba(59, 130, 246, 0.08);
+        }
+        .upload-area .icon { font-size: 2.5em; margin-bottom: 10px; }
+        .upload-area .text { color: #94a3b8; }
+        .upload-area .subtext { color: #64748b; font-size: 0.85em; margin-top: 6px; }
+
+        .file-list { margin-top: 12px; }
+        .file-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.5); border-radius: 8px; margin-bottom: 6px;
+            font-size: 0.88em;
+        }
+        .file-item .name { flex: 1; color: #cbd5e1; }
+        .file-item .size { color: #64748b; font-size: 0.82em; }
+        .file-item .remove {
+            color: #ef4444; cursor: pointer; font-weight: bold;
+            padding: 2px 6px; border-radius: 4px;
+        }
+        .file-item .remove:hover { background: rgba(239, 68, 68, 0.15); }
+
+        .submit-btn {
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: #fff; font-size: 1.1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s; letter-spacing: 0.5px;
+        }
+        .submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .progress-bar {
+            display: none; margin-top: 16px; background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px; overflow: hidden; height: 8px;
+        }
+        .progress-bar .fill {
+            height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 10px; width: 0%; transition: width 0.5s;
+        }
+        .status-msg {
+            margin-top: 12px; padding: 14px; border-radius: 10px;
+            font-size: 0.92em; display: none;
+        }
+        .status-msg.processing { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .status-msg.success { background: rgba(34, 197, 94, 0.12); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .status-msg.error { background: rgba(239, 68, 68, 0.12); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .download-btn {
+            display: inline-block; padding: 12px 24px; border-radius: 10px;
+            background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff;
+            text-decoration: none; font-weight: 600; margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .download-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3); }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px; padding: 14px; margin-bottom: 16px;
+            font-size: 0.85em; color: #93c5fd; line-height: 1.6;
+        }
+        .info-box strong { color: #60a5fa; }
+
+        .spinner {
+            display: inline-block; width: 18px; height: 18px;
+            border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            vertical-align: middle; margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .toast-region {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            width: min(420px, calc(100vw - 40px)); pointer-events: none;
+        }
+        .error-toast {
+            display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start;
+            padding: 16px; border-radius: 12px; pointer-events: auto;
+            color: #fee2e2; background: rgba(69, 10, 10, 0.96);
+            border: 1px solid rgba(248, 113, 113, 0.55);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+            animation: toast-in 0.2s ease-out;
+        }
+        .error-toast .toast-icon { color: #f87171; font-size: 1.25rem; line-height: 1; }
+        .error-toast .toast-title { color: #fecaca; font-weight: 700; margin-bottom: 4px; }
+        .error-toast .toast-message { color: #fca5a5; font-size: 0.9rem; line-height: 1.5; white-space: pre-line; }
+        .error-toast .toast-close {
+            border: 0; background: transparent; color: #fca5a5; cursor: pointer;
+            font-size: 1.1rem; line-height: 1; padding: 0 2px;
+        }
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .test-type-grid { grid-template-columns: 1fr; }
+            header h1 { font-size: 1.5em; }
+            .toast-region { top: 12px; right: 12px; width: calc(100vw - 24px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-region" id="toastRegion" aria-live="assertive" aria-atomic="true"></div>
+    <div class="container">
+        <header>
+            <h1>🏭 GMP Automation System</h1>
+            <p>Offline · <span data-i18n="subtitle">환경측정 PDF → Excel 자동 변환 시스템</span></p>
+            <div class="language-toggle" aria-label="Language selection">
+                <button type="button" data-language="ko">한국어</button>
+                <button type="button" data-language="en">English</button>
+            </div>
+        </header>
+
+        <!-- Step 1: Test Type -->
+        <div class="card">
+            <h2><span class="step">1</span> <span data-i18n="testType">측정 종류 선택</span></h2>
+            <div class="test-type-grid" id="testTypeGrid">
+                <div class="test-type-btn" data-type="airborne_particle" onclick="selectType(this)">
+                    <div class="label">A. Airborne Particle Test</div>
+                    <div class="desc" data-i18n="particleDesc">부유입자 측정 → Excel (4 sheets/AHU)</div>
+                </div>
+                <div class="test-type-btn" data-type="air_velocity" onclick="selectType(this)">
+                    <div class="label">B. Air Velocity Test</div>
+                    <div class="desc" data-i18n="velocityDesc">풍속 측정 → Excel (3 sheets/AHU)</div>
+                </div>
+                <div class="test-type-btn" data-type="air_change_rate" onclick="selectType(this)">
+                    <div class="label">C. Air Change Rate Test</div>
+                    <div class="desc" data-i18n="changeRateDesc">환기횟수 측정 → Excel (3 sheets/AHU)</div>
+                </div>
+                <div class="test-type-btn" data-type="hepa_filter" onclick="selectType(this)">
+                    <div class="label">D. HEPA Filter Test</div>
+                    <div class="desc" data-i18n="hepaDesc">HEPA 필터 검사 → Excel (3 sheets/AHU)</div>
+                </div>
+                <div class="test-type-btn" data-type="airflow_pattern" onclick="selectType(this)">
+                    <div class="label">E. Airflow Pattern Test</div>
+                    <div class="desc" data-i18n="airflowDesc">기류패턴 시험 → Excel (1 sheet/AHU)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Upload PDFs -->
+        <div class="card">
+            <h2><span class="step">2</span> <span data-i18n="uploadPdf">PDF 파일 업로드</span></h2>
+            <div class="info-box" id="uploadRules">📄 <strong>업로드 규칙:</strong> 같은 측정 종류의 PDF만 업로드하세요.
+                여러 AHU의 PDF를 한 번에 업로드할 수 있습니다. 각 PDF = 1 AHU × 1 학기(semester)</div>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="icon">📁</div>
+                <div class="text" data-i18n="uploadAction">클릭하거나 파일을 드래그하세요</div>
+                <div class="subtext" data-i18n="uploadHint">PDF 파일만 가능 (여러 파일 동시 업로드 가능)</div>
+            </div>
+            <input type="file" id="fileInput" multiple accept=".pdf" style="display:none" onchange="handleFiles(this.files)">
+            <div class="file-list" id="fileList"></div>
+        </div>
+
+        <!-- Step 3: Generate -->
+        <div class="card">
+            <h2><span class="step">3</span> <span data-i18n="generateExcel">Excel 파일 생성</span></h2>
+            <button class="submit-btn" id="submitBtn" onclick="processFiles()" disabled>
+                <span data-i18n="startGeneration">🚀 Excel 자동 생성 시작</span>
+            </button>
+            <div class="progress-bar" id="progressBar"><div class="fill" id="progressFill"></div></div>
+            <div class="status-msg" id="statusMsg"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedType = null;
+        let uploadedFiles = [];
+        const translations = {
+            ko: {
+                subtitle: '환경측정 PDF → Excel 자동 변환 시스템',
+                testType: '측정 종류 선택', particleDesc: '부유입자 측정 → Excel (4 sheets/AHU)',
+                velocityDesc: '풍속 측정 → Excel (3 sheets/AHU)', changeRateDesc: '환기횟수 측정 → Excel (3 sheets/AHU)',
+                hepaDesc: 'HEPA 필터 검사 → Excel (3 sheets/AHU)', airflowDesc: '기류패턴 시험 → Excel (1 sheet/AHU)',
+                uploadPdf: 'PDF 파일 업로드', uploadAction: '클릭하거나 파일을 드래그하세요',
+                uploadHint: 'PDF 파일만 가능 (여러 파일 동시 업로드 가능)', generateExcel: 'Excel 파일 생성',
+                startGeneration: '🚀 Excel 자동 생성 시작', processing: '처리 중... (PDF 분석 중, 잠시 기다려주세요)',
+                processingStatus: '⏳ PDF를 AI가 분석하고 있습니다. PDF 수에 따라 1~5분 소요될 수 있습니다...',
+                error: '❌ 오류:', success: '✅ 성공!', processed: '개의 AHU 데이터가 처리되었습니다.', ahuList: 'AHU 목록:',
+                warning: '⚠️ 경고:', download: '다운로드', networkError: '❌ 네트워크 오류:',
+                toastErrorTitle: '처리 오류',
+                timeoutError: '처리 시간이 초과되었습니다. PDF 수를 줄여 여러 번 나누어 업로드해 주세요.',
+                uploadTooLarge: '전체 업로드 용량이 100MB를 초과했습니다. PDF를 여러 번 나누어 업로드해 주세요.',
+                serverRequestError: '서버에서 요청을 처리하지 못했습니다. 잠시 후 다시 시도하거나 PDF를 나누어 업로드해 주세요.',
+                invalidResponse: '서버 응답을 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+                networkErrorMessage: '서버에 연결할 수 없습니다. 네트워크 상태를 확인한 후 다시 시도해 주세요.',
+                uploadRules: '📄 <strong>업로드 규칙:</strong> 같은 측정 종류의 PDF만 업로드하세요. 여러 AHU의 PDF를 한 번에 업로드할 수 있습니다. 각 PDF = 1 AHU × 1 학기(semester)'
+            },
+            en: {
+                subtitle: 'Environmental measurement PDF to Excel conversion system',
+                testType: 'Select Test Type', particleDesc: 'Airborne particle measurement → Excel (4 sheets/AHU)',
+                velocityDesc: 'Air velocity measurement → Excel (3 sheets/AHU)', changeRateDesc: 'Air change rate measurement → Excel (3 sheets/AHU)',
+                hepaDesc: 'HEPA filter test → Excel (3 sheets/AHU)', airflowDesc: 'Airflow pattern test → Excel (1 sheet/AHU)',
+                uploadPdf: 'Upload PDF Files', uploadAction: 'Click or drag files here', uploadHint: 'PDF files only (multiple files supported)',
+                generateExcel: 'Generate Excel File', startGeneration: '🚀 Start Excel Generation',
+                processing: 'Processing... (Analyzing PDFs, please wait)', processingStatus: '⏳ AI is analyzing the PDFs. This may take 1 to 5 minutes depending on the number of files...',
+                error: '❌ Error:', success: '✅ Success!', processed: ' AHU data sets have been processed.', ahuList: 'AHU list:',
+                warning: '⚠️ Warnings:', download: 'Download', networkError: '❌ Network error:',
+                toastErrorTitle: 'Processing error',
+                timeoutError: 'Processing timed out. Upload fewer PDFs and process them in smaller batches.',
+                uploadTooLarge: 'The total upload exceeds 100 MB. Split the PDFs into smaller batches.',
+                serverRequestError: 'The server could not complete the request. Try again later or upload smaller batches.',
+                invalidResponse: 'The server returned an invalid response. Please try again later.',
+                networkErrorMessage: 'Unable to reach the server. Check your network connection and try again.',
+                uploadRules: '📄 <strong>Upload rules:</strong> Upload only PDFs of the same test type. You can upload PDFs for multiple AHUs at once. Each PDF = 1 AHU × 1 semester.'
+            }
+        };
+        let language = localStorage.getItem('language') || 'ko';
+
+        function t(key) {
+            return translations[language][key];
+        }
+
+        function applyLanguage() {
+            document.documentElement.lang = language;
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+            document.getElementById('uploadRules').innerHTML = t('uploadRules');
+            document.querySelectorAll('[data-language]').forEach(button => {
+                button.classList.toggle('active', button.dataset.language === language);
+            });
+            if (!document.getElementById('submitBtn').disabled) {
+                document.getElementById('submitBtn').textContent = t('startGeneration');
+            }
+        }
+
+        document.querySelectorAll('[data-language]').forEach(button => {
+            button.addEventListener('click', () => {
+                language = button.dataset.language;
+                localStorage.setItem('language', language);
+                applyLanguage();
+            });
+        });
+        applyLanguage();
+
+        function selectType(el) {
+            document.querySelectorAll('#testTypeGrid .test-type-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedType = el.dataset.type;
+            updateSubmitBtn();
+        }
+
+        function handleFiles(files) {
+            for (let f of files) {
+                if (f.name.toLowerCase().endsWith('.pdf')) {
+                    uploadedFiles.push(f);
+                }
+            }
+            renderFileList();
+            updateSubmitBtn();
+        }
+
+        function removeFile(idx) {
+            uploadedFiles.splice(idx, 1);
+            renderFileList();
+            updateSubmitBtn();
+        }
+
+        function renderFileList() {
+            const list = document.getElementById('fileList');
+            if (uploadedFiles.length === 0) { list.innerHTML = ''; return; }
+            list.innerHTML = uploadedFiles.map((f, i) =>
+                `<div class="file-item">
+                    <span>📄</span>
+                    <span class="name">${f.name}</span>
+                    <span class="size">${(f.size / 1024).toFixed(1)} KB</span>
+                    <span class="remove" onclick="removeFile(${i})">✕</span>
+                </div>`
+            ).join('');
+        }
+
+        function updateSubmitBtn() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = !(selectedType && uploadedFiles.length > 0);
+        }
+
+        function showErrorToast(message) {
+            const region = document.getElementById('toastRegion');
+            region.replaceChildren();
+
+            const toast = document.createElement('div');
+            toast.className = 'error-toast';
+            toast.setAttribute('role', 'alert');
+
+            const icon = document.createElement('span');
+            icon.className = 'toast-icon';
+            icon.textContent = '✕';
+
+            const content = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'toast-title';
+            title.textContent = t('toastErrorTitle');
+            const body = document.createElement('div');
+            body.className = 'toast-message';
+            body.textContent = message;
+            content.append(title, body);
+
+            const close = document.createElement('button');
+            close.className = 'toast-close';
+            close.type = 'button';
+            close.setAttribute('aria-label', 'Close');
+            close.textContent = '×';
+            close.addEventListener('click', () => toast.remove());
+
+            toast.append(icon, content, close);
+            region.appendChild(toast);
+            window.setTimeout(() => toast.remove(), 12000);
+        }
+
+        function showProcessingError(statusMsg, message) {
+            statusMsg.className = 'status-msg error';
+            statusMsg.style.display = 'block';
+            statusMsg.textContent = `${t('error')} ${message}`;
+            showErrorToast(message);
+        }
+
+        function fallbackErrorForStatus(status) {
+            if (status === 413) return t('uploadTooLarge');
+            if (status === 408 || status === 504) return t('timeoutError');
+            if (status >= 500) return t('serverRequestError');
+            return t('invalidResponse');
+        }
+
+        // Drag & drop
+        const ua = document.getElementById('uploadArea');
+        ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('dragover'); });
+        ua.addEventListener('dragleave', () => ua.classList.remove('dragover'));
+        ua.addEventListener('drop', e => {
+            e.preventDefault(); ua.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        async function processFiles() {
+            const btn = document.getElementById('submitBtn');
+            const statusMsg = document.getElementById('statusMsg');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> ' + t('processing');
+            statusMsg.className = 'status-msg processing';
+            statusMsg.style.display = 'block';
+            statusMsg.innerHTML = t('processingStatus');
+            progressBar.style.display = 'block';
+            progressFill.style.width = '30%';
+
+            const formData = new FormData();
+            formData.append('test_type', selectedType);
+            formData.append('language', language);
+            uploadedFiles.forEach(f => formData.append('pdf_files', f));
+
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), 11 * 60 * 1000);
+            try {
+                progressFill.style.width = '60%';
+                const resp = await fetch('/process', {
+                    method: 'POST', body: formData, signal: controller.signal
+                });
+                const responseText = await resp.text();
+                let data = null;
+                if (responseText) {
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (_) {
+                        data = null;
+                    }
+                }
+                progressFill.style.width = '100%';
+
+                if (!resp.ok || !data || data.error) {
+                    showProcessingError(statusMsg, data?.error || fallbackErrorForStatus(resp.status));
+                } else {
+                    statusMsg.className = 'status-msg success';
+                    let msg = `${t('success')} ${data.ahu_count}${t('processed')}<br>`;
+                    msg += `${t('ahuList')} ${data.ahu_list.map(a => 'AHU-' + a).join(', ')}<br>`;
+                    if (data.warnings && data.warnings.length > 0) {
+                        msg += `<br>${t('warning')}<br>${data.warnings.join('<br>')}`;
+                    }
+                    msg += `<br><a href="${data.download_url}" class="download-btn">📥 ${data.filename} ${t('download')}</a>`;
+                    statusMsg.innerHTML = msg;
+                }
+            } catch (err) {
+                const message = err.name === 'AbortError'
+                    ? t('timeoutError')
+                    : t('networkErrorMessage');
+                showProcessingError(statusMsg, message);
+            } finally {
+                window.clearTimeout(timeoutId);
+            }
+
+            btn.disabled = false;
+            btn.textContent = t('startGeneration');
+            updateSubmitBtn();
+        }
+    </script>
+</body>
+</html>
