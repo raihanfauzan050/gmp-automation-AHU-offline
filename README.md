@@ -1,3 +1,5 @@
+[![English README](https://img.shields.io/badge/README-English-2563eb)](README.en.md)
+
 # GMP Automation System (GMP 환경측정 자동화 시스템)
 
 제약 및 바이오 시설의 환경측정 PDF 기록서를 분석하여 평균값, 기준선(경고/조치), 차트가 포함된 Microsoft Excel 보고서로 자동 변환하는 로컬 웹 애플리케이션입니다.
