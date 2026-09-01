@@ -1,6 +1,6 @@
-# GMP Automation System - Offline
-
 [![Korean README](https://img.shields.io/badge/README-한국어-2563eb)](README.md)
+
+# GMP Automation System - Offline
 
 A local web application that converts pharmaceutical-facility environmental measurement PDFs into structured Microsoft Excel reports with averages, limit indicators, and charts.
 
